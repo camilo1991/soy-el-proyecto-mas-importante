@@ -1,0 +1,24 @@
+{
+  "cli": { "appVersionSource": "remote" },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": { "APP_STORE": "dev" }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": { "buildType": "apk" }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": { "APP_STORE": "google_apple" }
+    },
+    "huawei": {
+      "extends": "production",
+      "android": { "buildType": "apk" },
+      "env": { "APP_STORE": "huawei" }
+    }
+  },
+  "submit": { "production": {} }
+}
