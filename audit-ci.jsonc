@@ -1,0 +1,13 @@
+{
+  "$schema": "https://github.com/IBM/audit-ci/raw/main/docs/schema.json",
+  // Falla el CI ante vulnerabilidades altas o críticas en dependencias de producción.
+  "high": true,
+  "skip-dev": true,
+  "allowlist": [
+    // zod 3.x: solo lo usa la herramienta de línea de comandos de Expo (@expo/cli) en la
+    // máquina de desarrollo y en CI para leer configuración local. No viaja dentro de la app
+    // ni procesa datos de usuarios. Expo aún no publica un arreglo (revisado 2026-10-28).
+    // Quitar esta excepción cuando @expo/cli actualice zod a >= 4.6.6.
+    "GHSA-mrhx-c7xc-m3w5|expo>@expo/cli>zod"
+  ]
+}

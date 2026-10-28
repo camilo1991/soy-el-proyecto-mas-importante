@@ -16,7 +16,7 @@ Regla base: **el teléfono nunca es de confianza**. Toda autorización vive en P
 | Enumeración de cuentas | Mensajes de error genéricos en el login | `src/app/login.tsx` |
 | Robo de token en web | Flujo PKCE; cabeceras HSTS, `X-Frame-Options`, `nosniff`, `Permissions-Policy` | `src/lib/supabase.ts`, `vercel.json` |
 | Derecho a borrar | Borrar cuenta y todos los datos desde la app (exigido por Apple y Google) | `delete_my_account()` en `0003` |
-| Dependencias vulnerables | Dependabot semanal y `npm audit` en CI | `.github/` |
+| Dependencias vulnerables | Dependabot semanal y `audit-ci` en CI (falla con vulnerabilidades altas; excepciones justificadas en `audit-ci.jsonc`) | `.github/`, `audit-ci.jsonc` |
 | Secretos en el repositorio | `.env` ignorado; solo la *anon key* (pública por diseño) va en la app | `.gitignore`, `.env.example` |
 
 ## Pendientes antes de lanzar
