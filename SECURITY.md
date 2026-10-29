@@ -29,6 +29,8 @@ Regla base: **el teléfono nunca es de confianza**. Toda autorización vive en P
 - [ ] Verificación de edad mínima y consentimiento explícito para datos de salud.
 - [ ] Política de privacidad revisada por un abogado (Ley 1581 de 2012 en Colombia; RGPD si hay usuarios en Europa).
 - [ ] Revisión con OWASP MASVS antes de publicar en tiendas.
+- [ ] Fichas de ejercicios revisadas por un entrenador certificado (`content_reviewed_by`).
+- [ ] Confirmar el origen de las fotos de `assets/exercises` o reemplazarlas por fotos propias (ver `assets/exercises/FUENTE.md`).
 
 ## Reportar una vulnerabilidad
 

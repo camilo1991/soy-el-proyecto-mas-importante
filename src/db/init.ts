@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 
 import { getDatabaseKey } from '@/lib/secure-storage';
 
-import { LOCAL_SCHEMA, LOCAL_SCHEMA_VERSION } from './schema';
+import { LOCAL_MIGRATION_V2, LOCAL_SCHEMA, LOCAL_SCHEMA_VERSION } from './schema';
 
 export const DATABASE_NAME = 'soy-el-proyecto.db';
 
@@ -15,8 +15,8 @@ export async function initDatabase(db: SQLiteDatabase) {
     await db.execAsync(`PRAGMA key = "x'${key}'"`);
   }
   const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-  if ((row?.user_version ?? 0) < LOCAL_SCHEMA_VERSION) {
-    await db.execAsync(LOCAL_SCHEMA);
-    await db.execAsync(`PRAGMA user_version = ${LOCAL_SCHEMA_VERSION}`);
-  }
+  const version = row?.user_version ?? 0;
+  if (version < 1) await db.execAsync(LOCAL_SCHEMA);
+  if (version < 2) await db.execAsync(LOCAL_MIGRATION_V2); // vuelve a descargar el catálogo con las fichas
+  if (version < LOCAL_SCHEMA_VERSION) await db.execAsync(`PRAGMA user_version = ${LOCAL_SCHEMA_VERSION}`);
 }
