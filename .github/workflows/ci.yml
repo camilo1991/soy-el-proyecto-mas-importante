@@ -20,7 +20,7 @@ jobs:
       - run: npm ci
       - run: npx tsc --noEmit
       - run: npx expo export --platform web
-      - run: npm audit --omit=dev --audit-level=high
+      - run: npx --yes audit-ci@7 --config audit-ci.jsonc
 
   database:
     runs-on: ubuntu-latest

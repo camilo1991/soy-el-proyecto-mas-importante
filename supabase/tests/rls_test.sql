@@ -3,12 +3,15 @@
 begin;
 
 -- Usuarios de prueba: A sigue a B; C no sigue a nadie.
-insert into auth.users values ('00000000-0000-0000-0000-00000000000a'),
-  ('00000000-0000-0000-0000-00000000000b'), ('00000000-0000-0000-0000-00000000000c');
-insert into profiles (id, username, display_name) values
-  ('00000000-0000-0000-0000-00000000000a', 'ana', 'Ana'),
-  ('00000000-0000-0000-0000-00000000000b', 'beto', 'Beto'),
-  ('00000000-0000-0000-0000-00000000000c', 'caro', 'Caro');
+-- El registro crea el perfil automáticamente (trigger on_auth_user_created).
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-00000000000a', 'ana@example.com'),
+  ('00000000-0000-0000-0000-00000000000b', 'beto@example.com'),
+  ('00000000-0000-0000-0000-00000000000c', 'ana@otro.com');
+do $$ begin
+  assert (select count(*) from profiles) = 3, 'cada registro debe crear su perfil';
+  assert (select count(distinct username) from profiles) = 3, 'usernames únicos aunque el correo se repita';
+end $$;
 insert into follows (follower_id, followee_id) values
   ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000b');
 
