@@ -2,7 +2,7 @@
  * Base local (SQLite). Es la fuente de verdad mientras entrenas: todo se escribe aquí primero
  * y la tabla `outbox` guarda en orden los cambios pendientes de subir a Supabase.
  */
-export const LOCAL_SCHEMA_VERSION = 1;
+export const LOCAL_SCHEMA_VERSION = 2;
 
 export const LOCAL_SCHEMA = `
 PRAGMA journal_mode = WAL;
@@ -73,4 +73,18 @@ CREATE TABLE IF NOT EXISTS sync_state (
 
 CREATE INDEX IF NOT EXISTS idx_we_workout ON workout_exercises(workout_id, position);
 CREATE INDEX IF NOT EXISTS idx_sets_we ON sets(workout_exercise_id, position);
+`;
+
+/** v2: fichas de tutorial en el catálogo de ejercicios (listas guardadas como JSON). */
+export const LOCAL_MIGRATION_V2 = `
+ALTER TABLE exercises ADD COLUMN difficulty TEXT NOT NULL DEFAULT 'intermedio';
+ALTER TABLE exercises ADD COLUMN primary_muscles TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE exercises ADD COLUMN secondary_muscles TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE exercises ADD COLUMN instructions TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE exercises ADD COLUMN common_mistakes TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE exercises ADD COLUMN safety_tip TEXT;
+ALTER TABLE exercises ADD COLUMN easier_alternative_id TEXT;
+ALTER TABLE exercises ADD COLUMN media_url TEXT;
+ALTER TABLE exercises ADD COLUMN video_url TEXT;
+DELETE FROM sync_state WHERE key = 'exercises';
 `;
