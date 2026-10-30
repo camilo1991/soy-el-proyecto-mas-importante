@@ -98,5 +98,18 @@ do $$ begin
   exception when insufficient_privilege then null; end;
 end $$;
 
+-- Fotos de perfil: cada quien sube solo a su carpeta.
+reset role; set local role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+insert into storage.objects (bucket_id, name) values ('avatars', '00000000-0000-0000-0000-00000000000a/avatar.jpg');
+do $$ begin
+  begin insert into storage.objects (bucket_id, name) values ('avatars', '00000000-0000-0000-0000-00000000000b/avatar.jpg');
+        raise exception 'FALLO: A subió una foto en la carpeta de B';
+  exception when insufficient_privilege then null; end;
+  begin update profiles set avatar_url = 'https://evil.example.com/x.jpg' where id = auth.uid();
+        raise exception 'FALLO: aceptó una foto de perfil externa';
+  exception when check_violation then null; end;
+end $$;
+
 \echo 'OK: todas las pruebas de seguridad pasaron'
 rollback;

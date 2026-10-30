@@ -54,6 +54,14 @@
         {
           "faceIDPermission": "Usamos Face ID para proteger tu cuenta."
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Usamos tus fotos solo para tu foto de perfil.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
       ]
     ],
     "experiments": {

@@ -1,6 +1,6 @@
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable, ScrollView, SectionList, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { radius, space, useTheme } from '@/constants/theme';
@@ -108,17 +108,35 @@ function ExercisePicker({ visible, onClose, onPick }: { visible: boolean; onClos
   const db = useSQLiteContext();
   const [q, setQ] = useState('');
   const [beginner, setBeginner] = useState(false);
+  const [muscle, setMuscle] = useState<string | null>(null);
+  const [muscles, setMuscles] = useState<string[]>([]);
   const [guide, setGuide] = useState<string | null>(null);
   const [items, setItems] = useState<{ id: string; name: string; muscle_group: string; difficulty: string }[]>([]);
+
+  useEffect(() => {
+    if (!visible) return;
+    db.getAllAsync<{ muscle_group: string }>(
+      'SELECT DISTINCT muscle_group FROM exercises WHERE deleted_at IS NULL ORDER BY muscle_group')
+      .then((rows) => setMuscles(rows.map((r) => r.muscle_group)));
+  }, [db, visible]);
 
   useEffect(() => {
     if (!visible) return;
     db.getAllAsync<{ id: string; name: string; muscle_group: string; difficulty: string }>(
       `SELECT id, name, muscle_group, difficulty FROM exercises
        WHERE deleted_at IS NULL AND name LIKE ? AND (? = 0 OR difficulty = 'principiante')
-       ORDER BY CASE difficulty WHEN 'principiante' THEN 0 WHEN 'intermedio' THEN 1 ELSE 2 END, name LIMIT 100`,
-      `%${q}%`, beginner ? 1 : 0).then(setItems);
-  }, [db, q, beginner, visible]);
+         AND (? IS NULL OR muscle_group = ?)
+       ORDER BY muscle_group, CASE difficulty WHEN 'principiante' THEN 0 WHEN 'intermedio' THEN 1 ELSE 2 END, name LIMIT 200`,
+      `%${q}%`, beginner ? 1 : 0, muscle, muscle).then(setItems);
+  }, [db, q, beginner, muscle, visible]);
+
+  // Agrupa la lista por músculo para mostrar un encabezado por grupo.
+  const sections = items.reduce<{ title: string; data: typeof items }[]>((acc, e) => {
+    const last = acc.at(-1);
+    if (last && last.title === e.muscle_group) last.data.push(e);
+    else acc.push({ title: e.muscle_group, data: [e] });
+    return acc;
+  }, []);
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
@@ -129,16 +147,25 @@ function ExercisePicker({ visible, onClose, onPick }: { visible: boolean; onClos
           style={[styles.filter, { backgroundColor: beginner ? t.accent : t.card }]}>
           <Text style={{ color: beginner ? t.accentText : t.text, fontWeight: '700' }}>Solo para principiantes</Text>
         </Pressable>
-        <FlatList data={items} keyExtractor={(e) => e.id}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.sm }} style={{ flexGrow: 0 }}>
+          {[null, ...muscles].map((m) => (
+            <Pressable key={m ?? 'todos'} onPress={() => setMuscle(m)} accessibilityRole="button"
+              accessibilityState={{ selected: muscle === m }}
+              style={[styles.chip, { backgroundColor: muscle === m ? t.text : t.card, borderColor: t.border }]}>
+              <Text style={{ color: muscle === m ? t.bg : t.text, fontWeight: '700', textTransform: 'capitalize' }}>{m ?? 'Todos'}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+        <SectionList sections={sections} keyExtractor={(e) => e.id} stickySectionHeadersEnabled={false}
           ListEmptyComponent={<Text style={{ color: t.muted }}>Sin ejercicios aún. Conéctate una vez para descargar el catálogo.</Text>}
+          renderSectionHeader={({ section }) => (
+            <Text style={[styles.sectionHeader, { color: t.muted }]}>{section.title}</Text>
+          )}
           renderItem={({ item }) => (
             <View style={styles.pickRow}>
               <Pressable onPress={() => onPick(item.id)} style={{ flex: 1, gap: 2 }}>
                 <Text style={{ color: t.text, fontWeight: '700' }}>{item.name}</Text>
-                <View style={{ flexDirection: 'row', gap: space.sm, alignItems: 'center' }}>
-                  <Text style={{ color: t.muted }}>{item.muscle_group}</Text>
-                  <Badge text={DIFFICULTY_LABEL[item.difficulty] ?? item.difficulty} />
-                </View>
+                <Badge text={DIFFICULTY_LABEL[item.difficulty] ?? item.difficulty} />
               </Pressable>
               <Pressable onPress={() => setGuide(item.id)} hitSlop={8} accessibilityRole="button"
                 accessibilityLabel={`Ver cómo se hace ${item.name}`}>
@@ -163,6 +190,8 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', gap: space.sm, paddingHorizontal: space.xs },
   headerCell: { flex: 1, textAlign: 'center', fontSize: 12, fontWeight: '700' },
   caption: { minHeight: 48, borderWidth: 1, borderRadius: radius.md, padding: space.md, fontSize: 16 },
+  chip: { paddingVertical: space.xs + 2, paddingHorizontal: space.md, borderRadius: radius.lg, borderWidth: StyleSheet.hairlineWidth },
+  sectionHeader: { textTransform: 'uppercase', fontSize: 12, fontWeight: '800', marginTop: space.md, letterSpacing: 0.5 },
   pickRow: { paddingVertical: space.md, flexDirection: 'row', alignItems: 'center', gap: space.md },
   exHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.sm },
   filter: { alignSelf: 'flex-start', paddingVertical: space.sm, paddingHorizontal: space.lg, borderRadius: radius.lg },
