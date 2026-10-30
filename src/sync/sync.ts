@@ -67,15 +67,20 @@ export async function pullExercises(db: SQLiteDatabase) {
   const last = await db.getFirstAsync<{ value: string }>("SELECT value FROM sync_state WHERE key = 'exercises'");
   const since = last?.value ?? '1970-01-01T00:00:00Z';
   const { data, error } = await supabase.from('exercises')
-    .select('id, owner_id, name, muscle_group, equipment, tracking_type, updated_at, deleted_at')
+    .select('id, owner_id, name, muscle_group, equipment, tracking_type, updated_at, deleted_at, difficulty, primary_muscles, secondary_muscles, instructions, common_mistakes, safety_tip, easier_alternative_id, media_url, video_url')
     .gt('updated_at', since).order('updated_at').limit(1000);
   if (error || !data?.length) return;
   await db.withTransactionAsync(async () => {
     for (const e of data) {
       await db.runAsync(
-        `INSERT OR REPLACE INTO exercises (id, owner_id, name, muscle_group, equipment, tracking_type, updated_at, deleted_at)
-         VALUES (?,?,?,?,?,?,?,?)`,
-        e.id, e.owner_id, e.name, e.muscle_group, e.equipment, e.tracking_type, e.updated_at, e.deleted_at);
+        `INSERT OR REPLACE INTO exercises (id, owner_id, name, muscle_group, equipment, tracking_type, updated_at, deleted_at,
+           difficulty, primary_muscles, secondary_muscles, instructions, common_mistakes, safety_tip, easier_alternative_id,
+           media_url, video_url)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        e.id, e.owner_id, e.name, e.muscle_group, e.equipment, e.tracking_type, e.updated_at, e.deleted_at,
+        e.difficulty ?? 'intermedio', JSON.stringify(e.primary_muscles ?? []), JSON.stringify(e.secondary_muscles ?? []),
+        JSON.stringify(e.instructions ?? []), JSON.stringify(e.common_mistakes ?? []), e.safety_tip ?? null,
+        e.easier_alternative_id ?? null, e.media_url ?? null, e.video_url ?? null);
     }
     await db.runAsync("INSERT OR REPLACE INTO sync_state (key, value) VALUES ('exercises', ?)",
       data[data.length - 1].updated_at);
