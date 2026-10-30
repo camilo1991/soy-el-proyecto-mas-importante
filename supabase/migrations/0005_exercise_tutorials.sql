@@ -15,6 +15,19 @@ alter table public.exercises
   add column content_reviewed_by text,                        -- entrenador que validó la ficha
   add column content_reviewed_at timestamptz;
 
+-- Ejercicios base (también están en seed.sql; se repiten aquí porque la CLI de Supabase corre el seed
+-- después de las migraciones y las fichas de abajo los necesitan).
+insert into public.exercises (id, owner_id, name, muscle_group, equipment) values
+  ('018f0000-0000-7000-8000-000000000001', null, 'Sentadilla con barra', 'piernas', 'barra'),
+  ('018f0000-0000-7000-8000-000000000002', null, 'Press de banca', 'pecho', 'barra'),
+  ('018f0000-0000-7000-8000-000000000003', null, 'Peso muerto', 'espalda', 'barra'),
+  ('018f0000-0000-7000-8000-000000000004', null, 'Press militar', 'hombros', 'barra'),
+  ('018f0000-0000-7000-8000-000000000005', null, 'Dominadas', 'espalda', 'peso corporal'),
+  ('018f0000-0000-7000-8000-000000000006', null, 'Remo con barra', 'espalda', 'barra'),
+  ('018f0000-0000-7000-8000-000000000007', null, 'Hip thrust', 'glúteos', 'barra'),
+  ('018f0000-0000-7000-8000-000000000008', null, 'Curl de bíceps', 'brazos', 'mancuernas')
+on conflict (id) do nothing;
+
 -- Ejercicios de nivel principiante que sirven como alternativa más fácil.
 insert into public.exercises (id, owner_id, name, muscle_group, equipment, tracking_type) values
   ('018f0000-0000-7000-8000-000000000009', null, 'Sentadilla goblet', 'piernas', 'mancuerna', 'weight_reps'),
